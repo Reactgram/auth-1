@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User.js');
 
 
+
 // routes
 const authRouter = require('./routes/auth.js');
 
@@ -18,6 +19,20 @@ const PORT = 5010;
 // app.get("/", (req, res) => {
 //     res.send("Hello World");
 // })
+
+// middleware: 
+
+function customMiddleware(req, res, next){
+    // console.log("AuthRouter is running");
+    // console.log("body",req.body);
+    // console.log("params",req.params);
+    // console.log("query",req.query);
+    // console.log("headers",req.headers);
+    // console.log("url",req.url);
+    // console.log("method",req.method);
+    console.log("Url of Api hit is", req.url);
+    next();
+}
 
 // connecting to the database
 
@@ -35,8 +50,9 @@ mongoose.connect("mongodb+srv://auth:xf5RTGmZ8GGzIzLD@auth1-rectgram.apmhd.mongo
 // middleware
 app.use(express.json());
 
-
+app.use(customMiddleware);
 app.use(authRouter)
+
 
 
 
@@ -59,8 +75,7 @@ app.listen(PORT, () => {
 
 
 
-
-
+// env => environment variables
 
 
 
