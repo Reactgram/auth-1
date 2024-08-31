@@ -1,131 +1,85 @@
-const express = require("express");
-
-const User = require("../models/User.js");
-
-const { v4: uuidv4 } = require('uuid');
-
+const express = require('express');
 const authRouter = express.Router();
 
-const isLoggedIn = require("../middlewares/isLoggedIn.js");
-
+const User = require("../models/User.js");
+const { v4: uuidv4 } = require('uuid');
+const customResponse = require("../utilities/response.js");
 const bcrypt = require('bcrypt');
 const saltRounds = 12;
+const sendMail = require("../utilities/sendMail.js");
+const sendSms = require("../utilities/sendSms.js");
+const generateOtp = require("../utilities/generateOtp.js");
+// import env
+const dotenv = require("dotenv");
+dotenv.config();
+let web_url = process.env.website;
 
-const  letsMail = require("../utilities/letsMail.js");
 
- 
 
 authRouter.post("/signup", async (req, res) => {
-     
-    const {name,email, password} = req.body; 
+    let {name, email, password, phone} = req.body;
 
-    // validation: 
+    if(!name || !email || !password || !phone){
+        return customResponse(res, "Please provide all the fields")
+    }
+    // check if name is greater then 3 characters
+    // check if email is valid
+    // check if password is greater then 6 characters
+try{
+    let foundUser = await User.findOne({email: email});
 
-    if(!name || !email || !password){
-        return res.json({message: "Please fill all the fields"});
+    if(foundUser !=null){
+        return customResponse(res, "User already exists with this email");
     }
     let hashedPassword = await bcrypt.hash(password, saltRounds);
     let newUser = new User({
         name: name,
         email: email,
-        password: hashedPassword
-    })        
-try{
-    let savedUser = await newUser.save() // 2secs
-    if(savedUser==null){
-        return res.json({message: "Error saving user"});
-    }
-    else{
-        // send email => welcome email
+        password: hashedPassword,
+        phone: phone
+    });
 
-        letsMail({
-            name: name,
-            to: email,
-            subject: "Important information for Next week Test",
-            text: "Please be prepared for the test, it will be conducted on next week, please be prepared, and do not forget to bring your ID card, and other necessary things."
+    let savedUser = await newUser.save();
+    if(savedUser != null){
+         let otp = generateOtp();
+         // send email verification
+         savedUser.emailToken = uuidv4();
+         savedUser.email_sent_at = new Date();
+         savedUser.otp = otp;
+         savedUser.otp_sent_at = new Date();
+        const updatedUser = await savedUser.save();
+
+        // send email verification
+        sendMail({
+            to: updatedUser.email,
+            subject: "Welcome to our app",
+            name: updatedUser.name,
+            link: `${web_url}/verifyEmail/${updatedUser.emailToken}`
         })
-         savedUser.token = uuidv4();
-        let updatedUser = await savedUser.save();
-        if(updatedUser == null){
-            return res.json({message: "Error saving token"});
-        }
-        else{
-            return res.json({message: "User created successfully", user: savedUser});
-        }
+        // send otp
+        sendSms(`Your Otp is ${updatedUser.otp}`,updatedUser.phone)
+
+
+        return customResponse(res, "User created successfully and Mail and OTP sent", savedUser, 200, true);
     }
 }
 catch(err){
-    console.log("Error creating user", err);
+    return customResponse(res, "Error saving user", null, 500, false);
 }
 
 })
-
-
-authRouter.post("/login", async (req, res) => {
-    const {email, password} = req.body; 
-     
-     if(!email || !password){
-        return res.json({message: "Please fill all the fields"});
-    }
-    try{
-        let foundUser = await User.findOne({email: email});
-       const isSame  =  await bcrypt.compare(password, foundUser.password)
-       if(isSame){
-            foundUser.token = uuidv4();
-            let updatedUser = await foundUser.save();
-           if(updatedUser == null){
-               return res.json({message: "Error saving token"});
-           }
-           else{
-               return res.json({message: "User logged in successfully", user: updatedUser
-
-               });
-           }
-       }
-       else{
-              return res.json({message: "Invalid password"});
-             
-            }
-        }
-    
-    catch(err){
-        console.log("Error finding user", err);
-    }
-})
-
-
-
 
 module.exports = authRouter;
 
 
+// phone verification: 
 
-// middleware
+// verify otp
 
+// resend otp  
 
+// email Verifctionapi 
 
-// .then and catch alternativ= > async and await
+// resend email verification
 
-
-
-// encryption and decryption
-
-// "hello" => "defhaeriubgeiurbgeurbgiu"
-
-// hello
-
-// hashing
-
-// "hello" => "defhaeriubgeiurbgeurbgiu"
-
-// hello => "defhaeriubgeiurbgeurbgiu"
-
-
-
-
-
-
-// Email : 
-
-// configurtion 
-// sending email => text, html , attachments , template => dynamic data
+// login api

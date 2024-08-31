@@ -51,7 +51,7 @@ mongoose.connect("mongodb+srv://auth:xf5RTGmZ8GGzIzLD@auth1-rectgram.apmhd.mongo
 app.use(express.json());
 
 app.use(customMiddleware);
-app.use(authRouter)
+app.use("/api/auth",authRouter)
 
 
 
@@ -106,3 +106,17 @@ app.listen(PORT, () => {
 
 // xf5RTGmZ8GGzIzLD
 // mongodb+srv://auth:xf5RTGmZ8GGzIzLD@auth1-rectgram.apmhd.mongodb.net/
+
+
+
+
+// send SMS  => AWS
+// upload image => AWS S3 , cloudinary
+
+// validations: (model level, logic level)
+
+// JWT => token => verify => user
+
+// Passport.js => authecation => social media login
+
+// payments => razorpay
