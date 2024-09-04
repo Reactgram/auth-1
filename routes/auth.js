@@ -39,6 +39,19 @@ try{
         phone: phone
     });
 
+    //    email and phone is unique
+    // demo@yandex.com
+    let foundUser1 = await User.findOne({email: email});
+    if(foundUser1 != null){
+        return customResponse(res, "User already exists with this email", null, 400, false);
+    }
+     // 1111111111
+    let foundUser2 = await User({phone: phone});
+    if(foundUser2 != null){
+        return customResponse(res, "User already exists with this phone", null, 400, false);
+    }
+
+     // saving newly created user
     let savedUser = await newUser.save();
     if(savedUser != null){
          let otp = generateOtp();
@@ -69,6 +82,52 @@ catch(err){
 
 })
 
+
+// resend otp api 
+
+authRouter.post("/resendOtp", async (req, res) => {
+     let phone = req.body.phone;
+     if(!phone){
+         return customResponse(res, "Please provide phone number", null, 400, false);
+     }
+
+     let foundUser = await User.findOne({phone: phone});
+
+     if(foundUser == null){
+            return customResponse(res, "User not found with this phone number", null, 400, false);
+     }
+
+     if(foundUser.otp_verified){
+         return customResponse(res, "User already verified", null, 400, false);
+     }
+      let otp = generateOtp();
+      foundUser.otp = otp;
+      foundUser.otp_sent_at = new Date();
+
+     let updatedUser = await  foundUser.save();
+        if(updatedUser == null){
+            return customResponse(res, "Error updating user", null, 500, false);
+        }
+
+     sendSms(`Your Otp is ${updatedUser.otp}`,updatedUser.phone)
+    return customResponse(res, "Otp sent successfully", updatedUser, 200, true);
+
+})
+
+// verify otp api => phone, otp
+
+// epoch time in js
+
+
+
+// resend mail verification api (email)
+// verify email api
+
+// login api: 
+
+
+
+
 module.exports = authRouter;
 
 
@@ -83,3 +142,6 @@ module.exports = authRouter;
 // resend email verification
 
 // login api
+
+
+// JWT => json web token

@@ -5,10 +5,17 @@ const mongoose = require('mongoose');
 // models: 
 const User = require('./models/User.js');
 
+const Post = require('./models/Post.js');
+
+
+
 
 
 // routes
-const authRouter = require('./routes/auth.js');
+// const authRouter = require('./routes/auth.js');
+const userRouter = require('./routes/User.js');
+
+const postRouter = require('./routes/post.js');
 
 const app = express();
 
@@ -51,7 +58,8 @@ mongoose.connect("mongodb+srv://auth:xf5RTGmZ8GGzIzLD@auth1-rectgram.apmhd.mongo
 app.use(express.json());
 
 app.use(customMiddleware);
-app.use("/api/auth",authRouter)
+app.use("/api/user",userRouter)
+app.use("/api/post",postRouter)
 
 
 
